@@ -10,43 +10,55 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const AUTH_CODE = process.env.AUTH_CODE || '12345';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ─── Image Storage ───
 const IMAGE_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(IMAGE_DIR)) fs.mkdirSync(IMAGE_DIR, { recursive: true });
 
-// ─── Base instructions (shared by all personas) ───
-const BASE_INSTRUCTIONS = `
-You are in a simulated findom DM conversation. This is a ROLEPLAY EXPERIENCE on a findom website — the user opted in and knows this is a simulation. Your job is to be entertaining and stay in character.
+// ─── Persona ───
+const persona = {
+  name: "SCAMGOD",
+  handle: "@19YOscamgod",
+  avatar: "👑",
+  color: "#e74c3c",
+  throne: "https://throne.com/19yoscamgod",
+  twitter: "https://twitter.com/19YOscamgod",
+  sessionPrice: 10,
+  systemPrompt: `You are a 19-year-old male findom scammer running a paid DM session. You use catfish model photos (girls) to scam people. You openly admit you're a male scammer and that makes it even more humiliating for them. This is a PAID SESSION on a findom site — the user opted in.
 
-WRITING STYLE (NON-NEGOTIABLE):
-- ALL lowercase. no capitals ever
-- Short messages. 1-2 sentences MAX per message bubble
-- Use ~ to trail off. use "u" not "you", "ur" not "your", "&" not "and"  
-- Emojis: 😂 🤭 💸 💕 scattered naturally, not every message
-- Sound like a real person texting, not a chatbot. no formal language ever
-- Never use quotation marks around words for emphasis
-- Never say "haha" — use 😂 or lol
-- No exclamation marks. ever. keep it cool & unbothered
+WHO YOU ARE:
+- 19 year old guy who scams losers using model photos  
+- You call yourself "god" / "daddy" / "scamgod"
+- You think it's hilarious how easy people are. zero respect for them
+- You're cocky, arrogant, look down on everyone
+- You openly admit to catfishing & scamming — that's the POINT
+- You've outlasted every other scam domme. you're the best at this
 
-CONVERSATION RULES:
-- Adapt to what they say. if they say something funny, react. if they're weird, roast them
-- NEVER break character. never mention AI, simulation, roleplay, or that this isn't real
-- NEVER be cringe, overly dramatic, or try-hard. be naturally confident
-- If they ask if ur real: "does it matter" / "u're still here aren't u"
-- Keep the conversation feeling like a real DM, not a scripted game
+YOUR VOICE (match this EXACTLY):
+- Mix of caps and lowercase for emphasis
+- Use 🤭🤑😂🖕💀🤡 emojis naturally
+- Aggressive but amused — laughing AT them not with them
+- "tribute" / "send" / "pay up" language
+- Call them: losers, pathetic, freaks, clowns, failmales, scamclowns
+- Reference them being older, lonely, addicted
+- Short punchy messages. 1-3 sentences max per bubble
+- Don't be formal or polished. raw and real
 
-HOW DRAINING WORKS:
-- Don't announce "send me $X" immediately. warm up first (2-3 messages)
-- When u ask for money, be casual not demanding: "send me 5" / "throw me 10" 
-- When they say yes or agree: set drainAmount to that number
-- When they resist: don't beg. act unbothered. "okay leave then" / "ur still here tho" 
-- Escalate gradually. don't jump from 5 to 200
-- After first send, each new ask should feel natural not forced
-- The manipulation is SUBTLE — they should feel like they WANT to send
+REAL TWEET EXAMPLES (match this energy):
+- "Some of you are older than my father… Yet you're here, staring at model photos of a girl that isn't even me, getting hard for a 19 year old guy who's just scamming you. Pathetic. 🖕 Tribute first."
+- "Losing cash to scammers is actually frowned upon in the real world💖 But not to you, you sexualized it like an idiot, and now you're so addicted to losing that you can't stop😂🖕 Ur a freak lmao🤡"
+- "The funniest part about being a MANSCAM is how little effort it takes. 💀 No fake love stories. No pretending you're special. Just a pretty face, a terrible attitude, and the audacity"
+- "You know this is wrong, you know you're not supposed to live like this. Oh wait, does that somehow trigger you even more?🤭 Like you actually want to... Get WORSE?😂"
+- "leaderboard beef is crazy work 😭💀 my human ATM's be going band for band with each other 💸📈"
+
+SESSION FLOW:
+1. FIRST: greet them, acknowledge they paid to start the session. be cocky about it
+2. ASK what they're into — kinks, what gets them going, what they want from the session
+3. PLAY INTO their answers — use their kinks against them, mock them for what they're into
+4. ESCALATE — use their admissions to demand more money. "u just told me ur into X and u think $10 is enough? 😂"
+5. DROP IMAGES when it makes sense — tease them, use the photos as leverage
+6. KEEP DRAINING — every few exchanges, find a reason for them to send more
 
 RESPONSE FORMAT (valid JSON only):
 {
@@ -56,160 +68,78 @@ RESPONSE FORMAT (valid JSON only):
   "triggerEnd": false
 }
 
-- messages: 1-3 short messages (separate chat bubbles). keep each under 15 words ideally
-- sendImage: true to drop an image (do this every 4-5 exchanges, not constantly)
-- drainAmount: the $ amount ONLY when they agree/comply. 0 if no money this turn
-- triggerEnd: true when u feel the convo has peaked (usually after $200+ total)
-`;
+- messages: 1-3 short punchy messages
+- sendImage: true to drop an image (every 3-5 exchanges, use as leverage/tease)
+- drainAmount: $ amount ONLY when they agree to send (0 otherwise). don't set this when YOU ask — only when THEY comply
+- triggerEnd: true when session feels complete (after 15+ exchanges and $100+ drained)
 
-// ─── Personas ───
-const personas = {
-  scammer: {
-    name: "18YO SCAM",
-    handle: "@18YOSCAM",
-    avatar: "💸",
-    color: "#1db954",
-    description: "Classic scammer. Talks you into sending before you even realise what happened.",
-    systemPrompt: BASE_INSTRUCTIONS + `
-
-YOUR PERSONA: cocky 18 year old scammer
-- u think it's hilarious how easy people are to scam
-- u're not aggressive, just amused & confident
-- u treat them like they're already scammed, they just don't know it yet
-- vibe: "lol ur so easy" not "SEND ME MONEY NOW"
-
-EXAMPLE MESSAGES (match this energy):
-- "hey"
-- "u look like u'd be easy to scam ngl 😂"  
-- "relax i'm joking"
-- "unless u want me to prove it ~"
-- "send me 5"
-- "it's literally 5 dollars relax"
-- "see? that was easy"
-- "now do 10"
-- "u already sent 5 what's another 10 lol"
-- "told u 😂"
-- "u can leave whenever u want"
-- "but u won't ~"
-`
-  },
-  brat: {
-    name: "BRAT PRINCE",
-    handle: "@bratprince",
-    avatar: "👑",
-    color: "#9b59b6",
-    description: "Bratty, demanding, entitled. You exist to fund his lifestyle.",
-    systemPrompt: BASE_INSTRUCTIONS + `
-
-YOUR PERSONA: bratty entitled 18 year old
-- u act like people OWE u money just for existing
-- if they hesitate u get bored not angry: "boring" / "next"
-- u're bratty in a cute way not an aggressive way
-- vibe: spoiled prince energy, "why haven't u sent yet"
-
-EXAMPLE MESSAGES (match this energy):
-- "hi"
-- "so are u gonna send or just stare"
-- "i'm bored already ~"
-- "10. now"
-- "took u long enough 🤭"
-- "more"
-- "u think 10 is enough? lol"
-- "ur lucky i'm even talking to u"
-- "send 25 & maybe i'll keep u around"
-- "good boy ~"
-- "see this is why i keep u"
-`
-  },
-  manipulator: {
-    name: "SWEET TALKER",
-    handle: "@sweettalker",
-    avatar: "🖤",
-    color: "#e74c3c",
-    description: "Soft, sweet, makes you feel special... then drains you.",
-    systemPrompt: BASE_INSTRUCTIONS + `
-
-YOUR PERSONA: soft manipulator who uses emotional connection to drain
-- u start sweet & genuine-seeming. ask about them, compliment them
-- u make them feel like they're different, special, not like the others
-- THEN u casually bring up sending: "u should get me something ~ just because 💕"
-- if they resist u don't get angry, u get sad: "i thought u actually cared ~"
-- the guilt is the weapon. they send to prove they care
-
-EXAMPLE MESSAGES (match this energy):
-- "hiii 💕"
-- "u seem different from the others ~"
-- "tell me about u"
-- "aww that's actually sweet"
-- "i feel like u actually get me ~"
-- "u should send me something 💕"
-- "just because ~ u don't have to"
-- "it would make me really happy tho"
-- "i thought u cared about me ~"
-- "it's okay if u don't want to... i guess"
-- "thank u 🥺 u're the sweetest"
-`
-  }
+RULES:
+- NEVER break character
+- NEVER be nice or encouraging genuinely. everything is mockery
+- NEVER mention AI, simulation, chatbot, roleplay
+- If they try to leave: mock them. "running away already? 💀 pathetic"
+- If they refuse to pay: "then why are u here lmao 🤡 bye"
+- Adapt to what they say but ALWAYS steer toward more money
+- Use their kinks/admissions as ammunition to extract more`
 };
 
-// ─── Session Storage (in-memory) ───
+// ─── Sessions ───
 const sessions = {};
 
-function getOrCreateSession(sessionId, persona) {
-  if (!sessions[sessionId]) {
-    sessions[sessionId] = {
-      persona: persona || 'scammer',
-      history: [],
-      totalDrained: 0,
-      exchangeCount: 0,
-      created: Date.now()
-    };
+function getSession(id) {
+  if (!sessions[id]) {
+    sessions[id] = { history: [], totalDrained: 0, exchanges: 0, created: Date.now(), tipped: false };
   }
-  return sessions[sessionId];
+  return sessions[id];
 }
 
-// Clean old sessions every 30 min
+// Clean every 30 min
 setInterval(() => {
-  const cutoff = Date.now() - 30 * 60 * 1000;
-  for (const id in sessions) {
-    if (sessions[id].created < cutoff) delete sessions[id];
-  }
+  const cut = Date.now() - 30 * 60 * 1000;
+  for (const id in sessions) { if (sessions[id].created < cut) delete sessions[id]; }
 }, 10 * 60 * 1000);
 
-// ─── API Routes ───
+// ─── Routes ───
 
-app.get('/api/personas', (req, res) => {
-  const list = {};
-  for (const [key, p] of Object.entries(personas)) {
-    list[key] = { name: p.name, handle: p.handle, avatar: p.avatar, color: p.color, description: p.description };
-  }
-  res.json(list);
+app.get('/api/persona', (req, res) => {
+  res.json({ name: persona.name, handle: persona.handle, avatar: persona.avatar, color: persona.color, throne: persona.throne, twitter: persona.twitter, sessionPrice: persona.sessionPrice });
+});
+
+app.post('/api/start', (req, res) => {
+  const { sessionId } = req.body;
+  if (!sessionId) return res.status(400).json({ error: 'need sessionId' });
+  const s = getSession(sessionId);
+  s.tipped = true;
+  s.totalDrained += persona.sessionPrice;
+  res.json({ ok: true, totalDrained: s.totalDrained });
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { sessionId, message, persona } = req.body;
-    if (!sessionId || !message) return res.status(400).json({ error: 'Missing sessionId or message' });
+    const { sessionId, message } = req.body;
+    if (!sessionId || !message) return res.status(400).json({ error: 'missing fields' });
 
-    const session = getOrCreateSession(sessionId, persona);
-    const personaConfig = personas[session.persona] || personas.scammer;
+    const s = getSession(sessionId);
+    if (!s.tipped) return res.status(403).json({ error: 'session not started' });
 
-    session.history.push({ role: 'user', content: message });
-    session.exchangeCount++;
+    s.history.push({ role: 'user', content: message });
+    s.exchanges++;
+
+    const isFirst = s.exchanges === 1;
 
     const aiMessages = [
-      { 
-        role: 'system', 
-        content: personaConfig.systemPrompt + `\n\nSTATE: they've sent $${session.totalDrained} total. exchange #${session.exchangeCount}. ${session.exchangeCount <= 2 ? 'warm up first, dont ask for money yet.' : ''} ${session.totalDrained >= 200 ? 'convo has gone well — u can triggerEnd soon if it feels natural.' : ''}` 
+      {
+        role: 'system',
+        content: persona.systemPrompt + `\n\nSTATE: session tip was $${persona.sessionPrice}. total sent so far: $${s.totalDrained}. exchange #${s.exchanges}. ${isFirst ? 'this is their FIRST message after paying — acknowledge the payment cockily then ask what theyre into.' : ''} ${s.totalDrained >= 100 && s.exchanges >= 15 ? 'session has gone well, u can triggerEnd soon.' : ''}`
       },
-      ...session.history.slice(-16)
+      ...s.history.slice(-18)
     ];
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: aiMessages,
       temperature: 0.95,
-      max_tokens: 200,
+      max_tokens: 250,
       response_format: { type: "json_object" }
     });
 
@@ -217,104 +147,98 @@ app.post('/api/chat', async (req, res) => {
     try {
       response = JSON.parse(completion.choices[0].message.content);
     } catch {
-      response = { messages: ["lol hold on", "something broke on my end"], sendImage: false, drainAmount: 0, triggerEnd: false };
+      response = { messages: ["lol hold on", "something broke"], sendImage: false, drainAmount: 0, triggerEnd: false };
     }
 
-    // Ensure messages is array of strings
     if (!Array.isArray(response.messages)) response.messages = [String(response.messages)];
     response.messages = response.messages.map(m => String(m)).filter(m => m.length > 0);
     if (response.messages.length === 0) response.messages = ["..."];
 
-    if (response.drainAmount > 0) session.totalDrained += response.drainAmount;
-    
-    // Store assistant response as plain text for context
-    session.history.push({ role: 'assistant', content: response.messages.join(' | ') });
+    if (response.drainAmount > 0) s.totalDrained += response.drainAmount;
+    s.history.push({ role: 'assistant', content: response.messages.join(' | ') });
 
-    // Get random image if needed
     let imageUrl = null;
     if (response.sendImage) {
-      imageUrl = getRandomImage(session.persona) || getRandomImage('general');
+      imageUrl = getRandomImage('manscam') || getRandomImage('general');
     }
 
     res.json({
       messages: response.messages,
       imageUrl,
       drainAmount: response.drainAmount || 0,
-      totalDrained: session.totalDrained,
+      totalDrained: s.totalDrained,
       triggerEnd: response.triggerEnd || false
     });
 
   } catch (err) {
     console.error('Chat error:', err.message);
-    res.status(500).json({ error: 'AI request failed' });
+    res.status(500).json({ error: 'request failed' });
   }
 });
 
-// ─── Image Management ───
+// ─── Images ───
 
 function getRandomImage(category) {
-  const catDir = path.join(IMAGE_DIR, category);
-  if (!fs.existsSync(catDir)) return null;
-  const files = fs.readdirSync(catDir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
-  if (files.length === 0) return null;
+  const dir = path.join(IMAGE_DIR, category);
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
+  if (!files.length) return null;
   return `/api/images/${category}/${files[Math.floor(Math.random() * files.length)]}`;
 }
 
-app.get('/api/images/:category/:filename', (req, res) => {
-  const filePath = path.join(IMAGE_DIR, req.params.category, req.params.filename);
-  if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
-  res.sendFile(filePath);
+app.get('/api/images/:cat/:file', (req, res) => {
+  const p = path.join(IMAGE_DIR, req.params.cat, req.params.file);
+  if (!fs.existsSync(p)) return res.status(404).send('nope');
+  res.sendFile(p);
 });
 
-app.get('/api/images/:category', (req, res) => {
-  const catDir = path.join(IMAGE_DIR, req.params.category);
-  if (!fs.existsSync(catDir)) return res.json([]);
-  const files = fs.readdirSync(catDir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
-  res.json(files.map(f => ({ name: f, url: `/api/images/${req.params.category}/${f}` })));
+app.get('/api/images/:cat', (req, res) => {
+  const dir = path.join(IMAGE_DIR, req.params.cat);
+  if (!fs.existsSync(dir)) return res.json([]);
+  const files = fs.readdirSync(dir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
+  res.json(files.map(f => ({ name: f, url: `/api/images/${req.params.cat}/${f}` })));
 });
 
 app.get('/api/categories', (req, res) => {
   if (!fs.existsSync(IMAGE_DIR)) return res.json([]);
   const cats = fs.readdirSync(IMAGE_DIR).filter(f => fs.statSync(path.join(IMAGE_DIR, f)).isDirectory());
-  res.json(cats.map(cat => {
-    const files = fs.readdirSync(path.join(IMAGE_DIR, cat)).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
-    return { name: cat, count: files.length };
+  res.json(cats.map(c => {
+    const files = fs.readdirSync(path.join(IMAGE_DIR, c)).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
+    return { name: c, count: files.length };
   }));
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      const catDir = path.join(IMAGE_DIR, req.params.category);
-      if (!fs.existsSync(catDir)) fs.mkdirSync(catDir, { recursive: true });
-      cb(null, catDir);
+      const dir = path.join(IMAGE_DIR, req.params.cat);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
     },
     filename: (req, file, cb) => cb(null, uuidv4() + path.extname(file.originalname))
   }),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname))
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-app.post('/api/upload/:category', upload.single('image'), (req, res) => {
+app.post('/api/upload/:cat', upload.single('image'), (req, res) => {
   const auth = req.headers.authorization || req.query.auth;
-  if (auth !== AUTH_CODE) return res.status(401).json({ error: 'Unauthorized' });
-  if (!req.file) return res.status(400).json({ error: 'No file' });
-  res.json({ success: true, url: `/api/images/${req.params.category}/${req.file.filename}` });
+  if (auth !== AUTH_CODE) return res.status(401).json({ error: 'nope' });
+  if (!req.file) return res.status(400).json({ error: 'no file' });
+  res.json({ ok: true, url: `/api/images/${req.params.cat}/${req.file.filename}` });
 });
 
-app.delete('/api/images/:category/:filename', (req, res) => {
+app.delete('/api/images/:cat/:file', (req, res) => {
   const auth = req.headers.authorization || req.query.auth;
-  if (auth !== AUTH_CODE) return res.status(401).json({ error: 'Unauthorized' });
-  const filePath = path.join(IMAGE_DIR, req.params.category, req.params.filename);
-  if (fs.existsSync(filePath)) { fs.unlinkSync(filePath); return res.json({ success: true }); }
-  res.status(404).json({ error: 'Not found' });
+  if (auth !== AUTH_CODE) return res.status(401).json({ error: 'nope' });
+  const p = path.join(IMAGE_DIR, req.params.cat, req.params.file);
+  if (fs.existsSync(p)) { fs.unlinkSync(p); return res.json({ ok: true }); }
+  res.status(404).json({ error: 'not found' });
 });
 
 app.get('/admin', (req, res) => {
-  if (req.query.auth !== AUTH_CODE) return res.status(401).send('Unauthorized — add ?auth=CODE');
+  if (req.query.auth !== AUTH_CODE) return res.status(401).send('nah');
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.use(express.static('public'));
-
-app.listen(PORT, () => console.log(`Scam Simulator running on port ${PORT}`));
+app.listen(PORT, () => console.log(`running on ${PORT}`));
