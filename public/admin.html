@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Scam Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: -apple-system, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        .sub { color: #888; font-size: 14px; margin-bottom: 24px; }
+        
+        .section { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .section h2 { font-size: 16px; margin-bottom: 12px; }
+
+        .upload-area { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .upload-area select, .upload-area input[type="text"] {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
+            padding: 10px 14px; color: #fff; font-size: 14px;
+        }
+        .upload-area input[type="file"] { color: #888; font-size: 14px; }
+        .btn {
+            background: #1d9bf0; border: none; color: #fff; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn.danger { background: #e74c3c; }
+
+        .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .image-card { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: #1a1a1a; }
+        .image-card img { width: 100%; height: 100%; object-fit: cover; }
+        .image-card .delete-btn {
+            position: absolute; top: 6px; right: 6px;
+            background: rgba(231,76,60,0.9); border: none; color: #fff;
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+            font-size: 12px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .cat-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .cat-tab {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
+            padding: 8px 16px; cursor: pointer; font-size: 13px; color: #ccc;
+        }
+        .cat-tab.active { background: #1d9bf0; border-color: #1d9bf0; color: #fff; }
+        .cat-count { opacity: 0.6; margin-left: 4px; }
+
+        .status { padding: 8px 14px; border-radius: 8px; margin-top: 10px; font-size: 13px; }
+        .status.ok { background: rgba(29,185,84,0.15); color: #1db954; }
+        .status.err { background: rgba(231,76,60,0.15); color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>📸 Image Manager</h1>
+    <p class="sub">Upload images by category for the AI to use in conversations.</p>
+
+    <div class="section">
+        <h2>Upload</h2>
+        <div class="upload-area">
+            <select id="catSelect"><option value="">Select category...</option></select>
+            <input type="text" id="newCat" placeholder="or new category..." />
+            <input type="file" id="fileInput" accept="image/*" multiple />
+            <button class="btn" onclick="uploadImages()">Upload</button>
+        </div>
+        <div id="uploadStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>Images</h2>
+        <div class="cat-tabs" id="catTabs"></div>
+        <div class="image-grid" id="imageGrid"></div>
+    </div>
+
+    <script>
+        const AUTH = new URLSearchParams(location.search).get('auth');
+        let currentCat = '';
+
+        async function loadCategories() {
+            const cats = await fetch('/api/categories').then(r => r.json());
+            const select = document.getElementById('catSelect');
+            const tabs = document.getElementById('catTabs');
+            select.innerHTML = '<option value="">Select category...</option>';
+            tabs.innerHTML = '';
+
+            cats.forEach(cat => {
+                select.innerHTML += `<option value="${cat.name}">${cat.name} (${cat.count})</option>`;
+                const tab = document.createElement('div');
+                tab.className = 'cat-tab' + (cat.name === currentCat ? ' active' : '');
+                tab.innerHTML = `${cat.name}<span class="cat-count">${cat.count}</span>`;
+                tab.onclick = () => { currentCat = cat.name; loadCategories(); loadImages(cat.name); };
+                tabs.appendChild(tab);
+            });
+
+            if (currentCat) loadImages(currentCat);
+        }
+
+        async function loadImages(category) {
+            const images = await fetch(`/api/images/${category}`).then(r => r.json());
+            const grid = document.getElementById('imageGrid');
+            grid.innerHTML = '';
+            images.forEach(img => {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                card.innerHTML = `
+                    <img src="${img.url}" />
+                    <button class="delete-btn" onclick="deleteImage('${category}','${img.name}')">✕</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function uploadImages() {
+            const files = document.getElementById('fileInput').files;
+            const cat = document.getElementById('newCat').value.trim() || document.getElementById('catSelect').value;
+            if (!cat) return showStatus('Pick or create a category', 'err');
+            if (!files.length) return showStatus('Select files first', 'err');
+
+            let uploaded = 0;
+            for (const file of files) {
+                const form = new FormData();
+                form.append('image', file);
+                const res = await fetch(`/api/upload/${cat}?auth=${AUTH}`, { method: 'POST', body: form });
+                if (res.ok) uploaded++;
+            }
+            showStatus(`Uploaded ${uploaded}/${files.length} images to "${cat}"`, 'ok');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('newCat').value = '';
+            currentCat = cat;
+            loadCategories();
+        }
+
+        async function deleteImage(cat, name) {
+            if (!confirm('Delete this image?')) return;
+            await fetch(`/api/images/${cat}/${name}?auth=${AUTH}`, { method: 'DELETE' });
+            loadImages(cat);
+            loadCategories();
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('uploadStatus');
+            el.className = 'status ' + type;
+            el.textContent = msg;
+            setTimeout(() => el.textContent = '', 4000);
+        }
+
+        loadCategories();
+    </script>
+</body>
+</html>
