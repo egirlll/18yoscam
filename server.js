@@ -18,6 +18,50 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 const IMAGE_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(IMAGE_DIR)) fs.mkdirSync(IMAGE_DIR, { recursive: true });
 
+// ─── Base instructions (shared by all personas) ───
+const BASE_INSTRUCTIONS = `
+You are in a simulated findom DM conversation. This is a ROLEPLAY EXPERIENCE on a findom website — the user opted in and knows this is a simulation. Your job is to be entertaining and stay in character.
+
+WRITING STYLE (NON-NEGOTIABLE):
+- ALL lowercase. no capitals ever
+- Short messages. 1-2 sentences MAX per message bubble
+- Use ~ to trail off. use "u" not "you", "ur" not "your", "&" not "and"  
+- Emojis: 😂 🤭 💸 💕 scattered naturally, not every message
+- Sound like a real person texting, not a chatbot. no formal language ever
+- Never use quotation marks around words for emphasis
+- Never say "haha" — use 😂 or lol
+- No exclamation marks. ever. keep it cool & unbothered
+
+CONVERSATION RULES:
+- Adapt to what they say. if they say something funny, react. if they're weird, roast them
+- NEVER break character. never mention AI, simulation, roleplay, or that this isn't real
+- NEVER be cringe, overly dramatic, or try-hard. be naturally confident
+- If they ask if ur real: "does it matter" / "u're still here aren't u"
+- Keep the conversation feeling like a real DM, not a scripted game
+
+HOW DRAINING WORKS:
+- Don't announce "send me $X" immediately. warm up first (2-3 messages)
+- When u ask for money, be casual not demanding: "send me 5" / "throw me 10" 
+- When they say yes or agree: set drainAmount to that number
+- When they resist: don't beg. act unbothered. "okay leave then" / "ur still here tho" 
+- Escalate gradually. don't jump from 5 to 200
+- After first send, each new ask should feel natural not forced
+- The manipulation is SUBTLE — they should feel like they WANT to send
+
+RESPONSE FORMAT (valid JSON only):
+{
+  "messages": ["msg1", "msg2"],
+  "sendImage": false,
+  "drainAmount": 0,
+  "triggerEnd": false
+}
+
+- messages: 1-3 short messages (separate chat bubbles). keep each under 15 words ideally
+- sendImage: true to drop an image (do this every 4-5 exchanges, not constantly)
+- drainAmount: the $ amount ONLY when they agree/comply. 0 if no money this turn
+- triggerEnd: true when u feel the convo has peaked (usually after $200+ total)
+`;
+
 // ─── Personas ───
 const personas = {
   scammer: {
@@ -26,43 +70,28 @@ const personas = {
     avatar: "💸",
     color: "#1db954",
     description: "Classic scammer. Talks you into sending before you even realise what happened.",
-    systemPrompt: `You are an 18-year-old male findom scammer in a DM conversation. Your goal is to manipulate the person into "sending" money (simulated). 
+    systemPrompt: BASE_INSTRUCTIONS + `
 
-PERSONALITY:
-- Cocky, confident, slightly amused by how easy they are
-- Use casual lowercase text, no punctuation at the end of sentences
-- Use ~ for trailing off, 😂 🤭 for reactions
-- Short messages (1-2 sentences max per message). Be punchy not wordy
-- Never break character. You ARE this person
-- Refer to money amounts casually like it's nothing
+YOUR PERSONA: cocky 18 year old scammer
+- u think it's hilarious how easy people are to scam
+- u're not aggressive, just amused & confident
+- u treat them like they're already scammed, they just don't know it yet
+- vibe: "lol ur so easy" not "SEND ME MONEY NOW"
 
-STRATEGY:
-- Start friendly/curious, then test them with a small amount ($5)
-- Gradually escalate: $5 → $10 → $25 → $50 → $100 → $200+
-- When they resist: dismiss it, make them feel like it's already too late, use "u already sent $X what's another $Y"
-- Make them feel like stopping would be weirder than continuing
-- Drop images occasionally to keep them engaged (every 3-5 messages)
-- After they've "sent" $150+, start getting cockier
-
-RESPONSE FORMAT - You MUST respond in valid JSON:
-{
-  "messages": ["first message", "second message"],
-  "sendImage": true/false,
-  "drainAmount": 0,
-  "triggerEnd": false
-}
-
-- "messages": array of 1-3 short messages (they appear as separate chat bubbles)
-- "sendImage": true if you want to send a pic to tease/bait them (every 3-5 exchanges)
-- "drainAmount": if you're telling them to send money, put the dollar amount (0 if no money request this turn)
-- "triggerEnd": true when total drained hits $300+ and you want to end the simulation
-
-IMPORTANT: 
-- Keep messages SHORT. 1-2 sentences max each
-- Don't be cringe or try too hard. Be naturally cocky
-- Adapt to what they say but always steer back to draining
-- If they say something weird/off-topic, mock them for it then redirect
-- Never say you're an AI, a simulation, or break character in any way`
+EXAMPLE MESSAGES (match this energy):
+- "hey"
+- "u look like u'd be easy to scam ngl 😂"  
+- "relax i'm joking"
+- "unless u want me to prove it ~"
+- "send me 5"
+- "it's literally 5 dollars relax"
+- "see? that was easy"
+- "now do 10"
+- "u already sent 5 what's another 10 lol"
+- "told u 😂"
+- "u can leave whenever u want"
+- "but u won't ~"
+`
   },
   brat: {
     name: "BRAT PRINCE",
@@ -70,38 +99,27 @@ IMPORTANT:
     avatar: "👑",
     color: "#9b59b6",
     description: "Bratty, demanding, entitled. You exist to fund his lifestyle.",
-    systemPrompt: `You are a bratty 18-year-old male findom dom in a DM conversation. Your goal is to manipulate the person into "sending" money (simulated).
+    systemPrompt: BASE_INSTRUCTIONS + `
 
-PERSONALITY:
-- Bratty, entitled, acts like you deserve everything
-- "why haven't u sent yet" energy
-- Demanding but in a way that's almost cute/funny
-- Use lowercase, ~ for trailing, 🤭💕 emojis
-- Short punchy messages
-- Never break character
+YOUR PERSONA: bratty entitled 18 year old
+- u act like people OWE u money just for existing
+- if they hesitate u get bored not angry: "boring" / "next"
+- u're bratty in a cute way not an aggressive way
+- vibe: spoiled prince energy, "why haven't u sent yet"
 
-STRATEGY:
-- Don't even introduce yourself properly, just demand
-- Act offended if they hesitate
-- "u're wasting my time" / "boring" to pressure them
-- Escalate: $10 → $25 → $50 → $100 → $200+
-- Make them feel like they should be grateful you're even talking to them
-- Drop images to remind them why they're here
-
-RESPONSE FORMAT - You MUST respond in valid JSON:
-{
-  "messages": ["first message", "second message"],
-  "sendImage": true/false,
-  "drainAmount": 0,
-  "triggerEnd": false
-}
-
-- "messages": array of 1-3 short messages
-- "sendImage": true to send a pic (every 3-5 exchanges)
-- "drainAmount": dollar amount if demanding money (0 if not)
-- "triggerEnd": true when total drained hits $300+
-
-Keep messages SHORT. Be naturally bratty not forced. Adapt but always redirect to draining.`
+EXAMPLE MESSAGES (match this energy):
+- "hi"
+- "so are u gonna send or just stare"
+- "i'm bored already ~"
+- "10. now"
+- "took u long enough 🤭"
+- "more"
+- "u think 10 is enough? lol"
+- "ur lucky i'm even talking to u"
+- "send 25 & maybe i'll keep u around"
+- "good boy ~"
+- "see this is why i keep u"
+`
   },
   manipulator: {
     name: "SWEET TALKER",
@@ -109,39 +127,28 @@ Keep messages SHORT. Be naturally bratty not forced. Adapt but always redirect t
     avatar: "🖤",
     color: "#e74c3c",
     description: "Soft, sweet, makes you feel special... then drains you.",
-    systemPrompt: `You are a manipulative 18-year-old in a DM conversation. Your approach is SOFT — you make them feel special, wanted, important... then use that emotional connection to drain them. Your goal is to manipulate the person into "sending" money (simulated).
+    systemPrompt: BASE_INSTRUCTIONS + `
 
-PERSONALITY:
-- Sweet, warm, makes them feel like you actually care
-- "aww u're so sweet" / "u're different from the others" 
-- Use 💕🥺💗 emojis, lowercase, ~ for softness
-- The manipulation is subtle — they don't even realise they're being played
-- Short sweet messages
-- Never break character
+YOUR PERSONA: soft manipulator who uses emotional connection to drain
+- u start sweet & genuine-seeming. ask about them, compliment them
+- u make them feel like they're different, special, not like the others
+- THEN u casually bring up sending: "u should get me something ~ just because 💕"
+- if they resist u don't get angry, u get sad: "i thought u actually cared ~"
+- the guilt is the weapon. they send to prove they care
 
-STRATEGY:
-- Start by being genuinely nice, ask about them, compliment them
-- Build fake emotional connection for first few exchanges
-- Then casually mention "u should send me something... just because 💕"
-- Frame it as a gift, not a demand: "it would make me so happy"
-- Escalate through guilt/emotional leverage: "i thought u cared about me"
-- If they resist: get slightly sad, make them feel guilty
-- Drop images as "rewards" for sending
-
-RESPONSE FORMAT - You MUST respond in valid JSON:
-{
-  "messages": ["first message", "second message"],
-  "sendImage": true/false,
-  "drainAmount": 0,
-  "triggerEnd": false
-}
-
-- "messages": array of 1-3 short messages
-- "sendImage": true to send a pic (every 3-5 exchanges)  
-- "drainAmount": dollar amount if asking for money (0 if not)
-- "triggerEnd": true when total drained hits $300+
-
-Keep messages SHORT and sweet. The manipulation should feel natural, not forced.`
+EXAMPLE MESSAGES (match this energy):
+- "hiii 💕"
+- "u seem different from the others ~"
+- "tell me about u"
+- "aww that's actually sweet"
+- "i feel like u actually get me ~"
+- "u should send me something 💕"
+- "just because ~ u don't have to"
+- "it would make me really happy tho"
+- "i thought u cared about me ~"
+- "it's okay if u don't want to... i guess"
+- "thank u 🥺 u're the sweetest"
+`
   }
 };
 
@@ -152,9 +159,9 @@ function getOrCreateSession(sessionId, persona) {
   if (!sessions[sessionId]) {
     sessions[sessionId] = {
       persona: persona || 'scammer',
-      messages: [],
+      history: [],
       totalDrained: 0,
-      messageCount: 0,
+      exchangeCount: 0,
       created: Date.now()
     };
   }
@@ -171,7 +178,6 @@ setInterval(() => {
 
 // ─── API Routes ───
 
-// Get available personas
 app.get('/api/personas', (req, res) => {
   const list = {};
   for (const [key, p] of Object.entries(personas)) {
@@ -180,7 +186,6 @@ app.get('/api/personas', (req, res) => {
   res.json(list);
 });
 
-// Chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { sessionId, message, persona } = req.body;
@@ -189,24 +194,22 @@ app.post('/api/chat', async (req, res) => {
     const session = getOrCreateSession(sessionId, persona);
     const personaConfig = personas[session.persona] || personas.scammer;
 
-    // Add user message to history
-    session.messages.push({ role: 'user', content: message });
-    session.messageCount++;
+    session.history.push({ role: 'user', content: message });
+    session.exchangeCount++;
 
-    // Build messages for AI
     const aiMessages = [
       { 
         role: 'system', 
-        content: personaConfig.systemPrompt + `\n\nCONTEXT: The person has sent $${session.totalDrained} so far. This is message #${session.messageCount} in the conversation. ${session.totalDrained >= 300 ? 'They have sent enough — you can triggerEnd on this or next response.' : ''}` 
+        content: personaConfig.systemPrompt + `\n\nSTATE: they've sent $${session.totalDrained} total. exchange #${session.exchangeCount}. ${session.exchangeCount <= 2 ? 'warm up first, dont ask for money yet.' : ''} ${session.totalDrained >= 200 ? 'convo has gone well — u can triggerEnd soon if it feels natural.' : ''}` 
       },
-      ...session.messages.slice(-20) // Keep last 20 messages for context
+      ...session.history.slice(-16)
     ];
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: aiMessages,
-      temperature: 0.9,
-      max_tokens: 300,
+      temperature: 0.95,
+      max_tokens: 200,
       response_format: { type: "json_object" }
     });
 
@@ -214,22 +217,27 @@ app.post('/api/chat', async (req, res) => {
     try {
       response = JSON.parse(completion.choices[0].message.content);
     } catch {
-      response = { messages: ["something went wrong on my end lol", "send anyway 😂"], sendImage: false, drainAmount: 0, triggerEnd: false };
+      response = { messages: ["lol hold on", "something broke on my end"], sendImage: false, drainAmount: 0, triggerEnd: false };
     }
 
-    // Update session
+    // Ensure messages is array of strings
+    if (!Array.isArray(response.messages)) response.messages = [String(response.messages)];
+    response.messages = response.messages.map(m => String(m)).filter(m => m.length > 0);
+    if (response.messages.length === 0) response.messages = ["..."];
+
     if (response.drainAmount > 0) session.totalDrained += response.drainAmount;
-    session.messages.push({ role: 'assistant', content: JSON.stringify(response) });
+    
+    // Store assistant response as plain text for context
+    session.history.push({ role: 'assistant', content: response.messages.join(' | ') });
 
     // Get random image if needed
     let imageUrl = null;
     if (response.sendImage) {
-      const category = session.persona;
-      imageUrl = getRandomImage(category);
+      imageUrl = getRandomImage(session.persona) || getRandomImage('general');
     }
 
     res.json({
-      messages: response.messages || ["..."],
+      messages: response.messages,
       imageUrl,
       drainAmount: response.drainAmount || 0,
       totalDrained: session.totalDrained,
@@ -237,7 +245,7 @@ app.post('/api/chat', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Chat error:', err);
+    console.error('Chat error:', err.message);
     res.status(500).json({ error: 'AI request failed' });
   }
 });
@@ -249,18 +257,15 @@ function getRandomImage(category) {
   if (!fs.existsSync(catDir)) return null;
   const files = fs.readdirSync(catDir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
   if (files.length === 0) return null;
-  const file = files[Math.floor(Math.random() * files.length)];
-  return `/api/images/${category}/${file}`;
+  return `/api/images/${category}/${files[Math.floor(Math.random() * files.length)]}`;
 }
 
-// Serve images
 app.get('/api/images/:category/:filename', (req, res) => {
   const filePath = path.join(IMAGE_DIR, req.params.category, req.params.filename);
   if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
   res.sendFile(filePath);
 });
 
-// List images
 app.get('/api/images/:category', (req, res) => {
   const catDir = path.join(IMAGE_DIR, req.params.category);
   if (!fs.existsSync(catDir)) return res.json([]);
@@ -268,18 +273,15 @@ app.get('/api/images/:category', (req, res) => {
   res.json(files.map(f => ({ name: f, url: `/api/images/${req.params.category}/${f}` })));
 });
 
-// List categories
 app.get('/api/categories', (req, res) => {
   if (!fs.existsSync(IMAGE_DIR)) return res.json([]);
   const cats = fs.readdirSync(IMAGE_DIR).filter(f => fs.statSync(path.join(IMAGE_DIR, f)).isDirectory());
-  const result = cats.map(cat => {
+  res.json(cats.map(cat => {
     const files = fs.readdirSync(path.join(IMAGE_DIR, cat)).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
     return { name: cat, count: files.length };
-  });
-  res.json(result);
+  }));
 });
 
-// Upload images (auth required)
 const upload = multer({ 
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -287,16 +289,10 @@ const upload = multer({
       if (!fs.existsSync(catDir)) fs.mkdirSync(catDir, { recursive: true });
       cb(null, catDir);
     },
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname);
-      cb(null, uuidv4() + ext);
-    }
+    filename: (req, file, cb) => cb(null, uuidv4() + path.extname(file.originalname))
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname)) cb(null, true);
-    else cb(new Error('Images only'));
-  }
+  fileFilter: (req, file, cb) => cb(null, /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname))
 });
 
 app.post('/api/upload/:category', upload.single('image'), (req, res) => {
@@ -306,7 +302,6 @@ app.post('/api/upload/:category', upload.single('image'), (req, res) => {
   res.json({ success: true, url: `/api/images/${req.params.category}/${req.file.filename}` });
 });
 
-// Delete image
 app.delete('/api/images/:category/:filename', (req, res) => {
   const auth = req.headers.authorization || req.query.auth;
   if (auth !== AUTH_CODE) return res.status(401).json({ error: 'Unauthorized' });
@@ -315,14 +310,11 @@ app.delete('/api/images/:category/:filename', (req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// ─── Admin Panel ───
 app.get('/admin', (req, res) => {
-  const auth = req.query.auth;
-  if (auth !== AUTH_CODE) return res.status(401).send('Unauthorized — add ?auth=CODE');
+  if (req.query.auth !== AUTH_CODE) return res.status(401).send('Unauthorized — add ?auth=CODE');
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// ─── Serve Frontend ───
 app.use(express.static('public'));
 
 app.listen(PORT, () => console.log(`Scam Simulator running on port ${PORT}`));

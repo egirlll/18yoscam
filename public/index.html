@@ -17,341 +17,272 @@
             overflow: hidden;
         }
 
-        /* ── Intro Screen ── */
         .screen { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
         .screen.hidden { display: none; }
 
-        .intro-title { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
-        .intro-sub { color: #888; font-size: 15px; text-align: center; max-width: 320px; margin-bottom: 32px; line-height: 1.5; }
+        .intro-title { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+        .intro-sub { color: #666; font-size: 14px; text-align: center; max-width: 300px; margin-bottom: 28px; line-height: 1.5; }
 
-        .persona-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 380px; }
-
+        .persona-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 380px; }
         .persona-card {
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 16px;
-            padding: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 14px;
+            background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 14px;
+            padding: 16px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 12px;
         }
-        .persona-card:hover { border-color: #444; background: #1a1a1a; }
-        .persona-card:active { transform: scale(0.98); }
-
+        .persona-card:active { transform: scale(0.98); background: #111; }
         .persona-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; flex-shrink: 0;
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
         }
-        .persona-info { flex: 1; }
-        .persona-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-        .persona-handle { color: #888; font-size: 13px; margin-bottom: 4px; }
-        .persona-desc { color: #aaa; font-size: 13px; line-height: 1.3; }
+        .persona-name { font-weight: 700; font-size: 15px; }
+        .persona-handle { color: #555; font-size: 12px; }
+        .persona-desc { color: #777; font-size: 12px; margin-top: 2px; }
 
-        /* ── Chat Screen ── */
+        /* Chat */
         .dm-header {
-            background: #1a1a1a;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #222;
-            z-index: 10;
+            background: #0a0a0a; padding: 12px 16px;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid #151515;
         }
-        .dm-header .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
-        .dm-header .name { font-weight: 700; font-size: 15px; }
-        .dm-header .handle { color: #888; font-size: 13px; }
+        .dm-header .av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .dm-header .nm { font-weight: 600; font-size: 14px; }
+        .dm-header .hd { color: #555; font-size: 12px; }
 
-        /* Drain Counter */
-        .drain-counter {
-            position: fixed; top: 70px; right: 14px;
-            background: rgba(255,30,30,0.12); border: 1px solid rgba(255,30,30,0.25);
-            padding: 6px 12px; border-radius: 10px; z-index: 20;
-            backdrop-filter: blur(10px); display: none; text-align: center;
+        .drain-pill {
+            position: fixed; top: 58px; right: 12px;
+            background: rgba(200,0,0,0.08); border: 1px solid rgba(200,0,0,0.15);
+            padding: 4px 10px; border-radius: 8px; z-index: 20;
+            display: none; text-align: center;
         }
-        .drain-label { font-size: 10px; color: #ff4444; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
-        .drain-amount { font-size: 20px; font-weight: 800; color: #ff4444; }
+        .drain-pill .dl { font-size: 9px; color: #cc3333; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
+        .drain-pill .da { font-size: 16px; font-weight: 700; color: #cc3333; }
 
-        /* Chat Area */
-        .chat-area {
-            flex: 1; overflow-y: auto; padding: 16px;
-            display: flex; flex-direction: column; gap: 4px;
+        .chat {
+            flex: 1; overflow-y: auto; padding: 14px;
+            display: flex; flex-direction: column; gap: 3px;
         }
-        .chat-area::-webkit-scrollbar { display: none; }
+        .chat::-webkit-scrollbar { display: none; }
 
-        .msg {
-            max-width: 78%; padding: 10px 14px; border-radius: 18px;
-            font-size: 15px; line-height: 1.4; word-wrap: break-word;
-            animation: popIn 0.25s ease;
+        .b {
+            max-width: 80%; padding: 9px 13px; border-radius: 18px;
+            font-size: 15px; line-height: 1.35; word-wrap: break-word;
+            animation: pop 0.2s ease;
         }
-        .msg.them { background: #2a2a2a; align-self: flex-start; border-bottom-left-radius: 6px; }
-        .msg.you  { background: #1d9bf0; align-self: flex-end; border-bottom-right-radius: 6px; }
+        .b.t { background: #1a1a1a; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .b.u { background: #1d9bf0; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .b.img { padding: 3px; background: none; }
+        .b.img img { border-radius: 12px; max-width: 200px; max-height: 260px; display: block; }
 
-        .msg.image-msg { padding: 4px; background: transparent; }
-        .msg.image-msg img { border-radius: 14px; max-width: 220px; max-height: 280px; display: block; }
-
-        @keyframes popIn {
-            from { opacity: 0; transform: translateY(6px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
+        .sent-notif {
+            align-self: center; color: #1db954; font-size: 12px; font-weight: 600;
+            padding: 6px 0; opacity: 0.7; animation: pop 0.3s ease;
         }
 
-        /* Typing */
-        .typing { align-self: flex-start; background: #2a2a2a; padding: 12px 18px; border-radius: 18px; border-bottom-left-radius: 6px; display: flex; gap: 4px; }
-        .typing .dot { width: 7px; height: 7px; background: #666; border-radius: 50%; animation: bounce 1.3s infinite; }
-        .typing .dot:nth-child(2) { animation-delay: 0.15s; }
-        .typing .dot:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+        @keyframes pop {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* Payment */
-        .payment-notif {
-            align-self: center; background: linear-gradient(135deg,#1db954,#0d8f3f);
-            padding: 10px 22px; border-radius: 12px; font-size: 14px; font-weight: 600;
-            text-align: center; margin: 6px 0;
-            animation: payPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-        }
-        @keyframes payPop { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+        .dots { align-self: flex-start; background: #1a1a1a; padding: 11px 16px; border-radius: 18px; border-bottom-left-radius: 4px; display: flex; gap: 3px; }
+        .dots span { width: 6px; height: 6px; background: #444; border-radius: 50%; animation: bop 1.2s infinite; }
+        .dots span:nth-child(2) { animation-delay: 0.15s; }
+        .dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bop { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
 
-        /* Input Bar */
-        .input-bar {
-            background: #111; border-top: 1px solid #222;
-            padding: 10px 14px; display: flex; gap: 10px; align-items: center;
+        .ibar {
+            background: #0a0a0a; border-top: 1px solid #151515;
+            padding: 8px 12px; display: flex; gap: 8px; align-items: center;
         }
-        .input-bar input {
-            flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 22px;
-            padding: 12px 18px; color: #fff; font-size: 15px; outline: none;
+        .ibar input {
+            flex: 1; background: #111; border: 1px solid #222; border-radius: 20px;
+            padding: 10px 16px; color: #fff; font-size: 15px; outline: none;
         }
-        .input-bar input::placeholder { color: #555; }
-        .input-bar input:focus { border-color: #1d9bf0; }
-        .input-bar button {
+        .ibar input::placeholder { color: #444; }
+        .ibar input:focus { border-color: #333; }
+        .ibar button {
             background: #1d9bf0; border: none; border-radius: 50%;
-            width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s; flex-shrink: 0;
+            width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
         }
-        .input-bar button:disabled { opacity: 0.3; cursor: default; }
-        .input-bar button svg { fill: #fff; width: 18px; height: 18px; }
+        .ibar button:disabled { opacity: 0.2; }
+        .ibar button svg { fill: #fff; width: 16px; height: 16px; }
 
-        /* End Screen */
-        .end-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.96);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 16px; z-index: 200; padding: 40px;
+        /* End */
+        .end { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 200; padding: 40px; }
+        .end.show { display: flex; }
+        .end .el { color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; }
+        .end .et { font-size: 48px; font-weight: 800; color: #cc3333; }
+        .end .em { color: #888; font-size: 14px; text-align: center; max-width: 280px; line-height: 1.5; }
+        .end a {
+            padding: 12px 32px; border-radius: 24px; font-size: 15px; font-weight: 700;
+            cursor: pointer; text-decoration: none; color: #fff; border: none; display: block;
         }
-        .end-overlay.hidden { display: none; }
-        .end-label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; }
-        .end-total { font-size: 52px; font-weight: 800; color: #ff4444; }
-        .end-msg { color: #aaa; font-size: 15px; text-align: center; max-width: 300px; line-height: 1.5; margin: 8px 0; }
-        .end-btn {
-            padding: 14px 36px; border-radius: 28px; font-size: 16px; font-weight: 700;
-            cursor: pointer; text-decoration: none; color: #fff; border: none; transition: 0.2s;
-        }
-        .end-btn:hover { transform: scale(1.04); }
-        .end-btn.dm   { background: linear-gradient(135deg,#1d9bf0,#0d6ebd); }
-        .end-btn.throne { background: linear-gradient(135deg,#1db954,#0d8f3f); margin-top: -4px; }
-        .end-sub { color: #ff4444; font-size: 12px; margin-top: 6px; }
-        .end-restart { background: none; border: 1px solid #333; color: #888; padding: 10px 28px; border-radius: 22px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+        .end .d { background: #1d9bf0; }
+        .end .th { background: #1db954; }
+        .end .rs { background: none; border: 1px solid #222; color: #666; padding: 10px 24px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-top: 4px; }
     </style>
 </head>
 <body>
 
-<!-- Intro -->
-<div class="screen" id="introScreen">
-    <div class="intro-title">💸 Scam Simulator</div>
-    <div class="intro-sub">Think you can't be scammed? Pick a persona and find out. No real money involved... yet.</div>
-    <div class="persona-grid" id="personaGrid"></div>
+<div class="screen" id="intro">
+    <div class="intro-title">💸 scam simulator</div>
+    <div class="intro-sub">think u can't be scammed?<br>pick someone & find out.</div>
+    <div class="persona-grid" id="pg"></div>
 </div>
 
-<!-- End -->
-<div class="end-overlay hidden" id="endScreen">
-    <div class="end-label">Total Drained</div>
-    <div class="end-total" id="endTotal">$0</div>
-    <div class="end-msg">that was a simulation.<br>imagine what the real thing feels like 😂</div>
-    <a href="https://twitter.com/messages/compose?text=i%20just%20got%20scammed%20in%20the%20simulator%20💸" class="end-btn dm" id="dmBtn" target="_blank">DM @18YOSCAM →</a>
-    <a href="#" class="end-btn throne" id="throneBtn" target="_blank">Send on Throne 💸</a>
-    <div class="end-sub">u were warned.</div>
-    <button class="end-restart" onclick="location.reload()">try again</button>
+<div class="end" id="end">
+    <div class="el">total drained</div>
+    <div class="et" id="endAmt">$0</div>
+    <div class="em">that was a simulation ~<br>imagine what the real thing feels like 😂</div>
+    <a href="https://twitter.com/messages/compose?text=i+got+scammed+💸" class="d" id="dmLink" target="_blank">dm @18YOSCAM →</a>
+    <a href="#" class="th" id="thrLink" target="_blank">throne 💸</a>
+    <button class="rs" onclick="location.reload()">try again</button>
 </div>
 
-<!-- Header -->
-<div class="dm-header" id="dmHeader" style="display:none">
-    <div class="avatar" id="headerAvatar">💸</div>
-    <div>
-        <div class="name" id="headerName">18YO SCAM</div>
-        <div class="handle" id="headerHandle">@18YOSCAM</div>
-    </div>
+<div class="dm-header" id="hdr" style="display:none">
+    <div class="av" id="hAv">💸</div>
+    <div><div class="nm" id="hNm">18YO SCAM</div><div class="hd" id="hHd">@18YOSCAM</div></div>
 </div>
 
-<div class="drain-counter" id="drainCounter">
-    <div class="drain-label">Drained</div>
-    <div class="drain-amount" id="drainAmount">$0</div>
+<div class="drain-pill" id="dp">
+    <div class="dl">sent</div>
+    <div class="da" id="dAmt">$0</div>
 </div>
 
-<div class="chat-area" id="chatArea" style="display:none"></div>
+<div class="chat" id="chat" style="display:none"></div>
 
-<div class="input-bar" id="inputBar" style="display:none">
-    <input type="text" id="msgInput" placeholder="say something..." autocomplete="off" />
-    <button id="sendBtn" onclick="sendMessage()">
+<div class="ibar" id="ibar" style="display:none">
+    <input type="text" id="inp" placeholder="say something..." autocomplete="off" />
+    <button id="sbtn" onclick="send()">
         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
 </div>
 
 <script>
-    let sessionId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
-    let currentPersona = null;
-    let totalDrained = 0;
-    let sending = false;
+let sid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+let persona = null;
+let drained = 0;
+let busy = false;
+const chat = document.getElementById('chat');
+const inp = document.getElementById('inp');
 
-    const chatArea = document.getElementById('chatArea');
-    const msgInput = document.getElementById('msgInput');
-    const sendBtn  = document.getElementById('sendBtn');
-
-    // Load personas
-    fetch('/api/personas').then(r => r.json()).then(personas => {
-        const grid = document.getElementById('personaGrid');
-        for (const [key, p] of Object.entries(personas)) {
-            const card = document.createElement('div');
-            card.className = 'persona-card';
-            card.innerHTML = `
-                <div class="persona-avatar" style="background:${p.color}">${p.avatar}</div>
-                <div class="persona-info">
-                    <div class="persona-name">${p.name}</div>
-                    <div class="persona-handle">${p.handle}</div>
-                    <div class="persona-desc">${p.description}</div>
-                </div>
-            `;
-            card.onclick = () => startChat(key, p);
-            grid.appendChild(card);
-        }
-    });
-
-    function startChat(key, persona) {
-        currentPersona = key;
-        document.getElementById('introScreen').classList.add('hidden');
-        document.getElementById('dmHeader').style.display = 'flex';
-        document.getElementById('chatArea').style.display = 'flex';
-        document.getElementById('inputBar').style.display = 'flex';
-        document.getElementById('headerAvatar').textContent = persona.avatar;
-        document.getElementById('headerAvatar').style.background = persona.color;
-        document.getElementById('headerName').textContent = persona.name;
-        document.getElementById('headerHandle').textContent = persona.handle;
-        msgInput.focus();
-
-        // Send initial empty message to get AI to start
-        sendToAI('[user just opened the DM — send the first message, be natural, open the conversation]');
+fetch('/api/personas').then(r=>r.json()).then(ps => {
+    const g = document.getElementById('pg');
+    for (const [k,p] of Object.entries(ps)) {
+        const c = document.createElement('div');
+        c.className = 'persona-card';
+        c.innerHTML = `<div class="persona-avatar" style="background:${p.color}">${p.avatar}</div><div><div class="persona-name">${p.name}</div><div class="persona-handle">${p.handle}</div><div class="persona-desc">${p.description}</div></div>`;
+        c.onclick = () => go(k,p);
+        g.appendChild(c);
     }
+});
 
-    function scrollDown() { chatArea.scrollTop = chatArea.scrollHeight; }
+function go(k,p) {
+    persona = k;
+    document.getElementById('intro').classList.add('hidden');
+    document.getElementById('hdr').style.display = 'flex';
+    chat.style.display = 'flex';
+    document.getElementById('ibar').style.display = 'flex';
+    document.getElementById('hAv').textContent = p.avatar;
+    document.getElementById('hAv').style.background = p.color;
+    document.getElementById('hNm').textContent = p.name;
+    document.getElementById('hHd').textContent = p.handle;
+    inp.focus();
+    toAI('[conversation just started — send the first message]');
+}
 
-    function addBubble(text, cls) {
-        const el = document.createElement('div');
-        el.className = 'msg ' + cls;
-        el.textContent = text;
-        chatArea.appendChild(el);
-        scrollDown();
-        return el;
-    }
+function scroll() { chat.scrollTop = chat.scrollHeight; }
 
-    function addImage(url) {
-        const el = document.createElement('div');
-        el.className = 'msg them image-msg';
-        el.innerHTML = `<img src="${url}" alt="" loading="lazy" />`;
-        chatArea.appendChild(el);
-        scrollDown();
-    }
+function bubble(txt, cls) {
+    const d = document.createElement('div');
+    d.className = 'b ' + cls;
+    d.textContent = txt;
+    chat.appendChild(d);
+    scroll();
+}
 
-    function addPayment(amount) {
-        totalDrained += amount;
-        const el = document.createElement('div');
-        el.className = 'payment-notif';
-        el.textContent = `💸 Payment Sent — $${amount}`;
-        chatArea.appendChild(el);
-        document.getElementById('drainCounter').style.display = 'block';
-        document.getElementById('drainAmount').textContent = '$' + totalDrained;
-        scrollDown();
-    }
+function showImg(url) {
+    const d = document.createElement('div');
+    d.className = 'b t img';
+    d.innerHTML = `<img src="${url}" />`;
+    chat.appendChild(d);
+    scroll();
+}
 
-    function showTyping() {
-        const el = document.createElement('div');
-        el.className = 'typing';
-        el.id = 'typingBubble';
-        el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-        chatArea.appendChild(el);
-        scrollDown();
-    }
-    function hideTyping() { const t = document.getElementById('typingBubble'); if (t) t.remove(); }
+function showSent(amt) {
+    drained += amt;
+    const d = document.createElement('div');
+    d.className = 'sent-notif';
+    d.textContent = `$${amt} sent`;
+    chat.appendChild(d);
+    document.getElementById('dp').style.display = 'block';
+    document.getElementById('dAmt').textContent = '$' + drained;
+    scroll();
+}
 
-    function showEnd() {
-        const end = document.getElementById('endScreen');
-        end.classList.remove('hidden');
-        // Animate counter
-        let n = 0;
-        const iv = setInterval(() => {
-            n += Math.ceil(totalDrained / 25);
-            if (n >= totalDrained) { n = totalDrained; clearInterval(iv); }
-            document.getElementById('endTotal').textContent = '$' + n;
-        }, 35);
-    }
+function dots() {
+    const d = document.createElement('div');
+    d.className = 'dots'; d.id = 'typ';
+    d.innerHTML = '<span></span><span></span><span></span>';
+    chat.appendChild(d); scroll();
+}
+function noDots() { const t = document.getElementById('typ'); if(t) t.remove(); }
 
-    async function sendMessage() {
-        const text = msgInput.value.trim();
-        if (!text || sending) return;
-        msgInput.value = '';
-        addBubble(text, 'you');
-        await sendToAI(text);
-    }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    async function sendToAI(text) {
-        sending = true;
-        sendBtn.disabled = true;
-        showTyping();
+async function send() {
+    const t = inp.value.trim();
+    if (!t || busy) return;
+    inp.value = '';
+    bubble(t, 'u');
+    await toAI(t);
+}
 
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId, message: text, persona: currentPersona })
-            });
-            const data = await res.json();
-            hideTyping();
+async function toAI(text) {
+    busy = true;
+    document.getElementById('sbtn').disabled = true;
+    dots();
 
-            if (data.drainAmount > 0) addPayment(data.drainAmount);
+    try {
+        const r = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ sessionId: sid, message: text, persona })
+        });
+        const d = await r.json();
+        noDots();
 
-            // Display messages with delays
-            for (let i = 0; i < data.messages.length; i++) {
-                if (i > 0) {
-                    showTyping();
-                    await sleep(600 + Math.random() * 500);
-                    hideTyping();
-                }
-                addBubble(data.messages[i], 'them');
-                await sleep(200);
-            }
+        if (d.drainAmount > 0) showSent(d.drainAmount);
 
-            if (data.imageUrl) {
-                await sleep(400);
-                addImage(data.imageUrl);
-            }
-
-            if (data.triggerEnd) {
-                await sleep(1500);
-                showEnd();
-            }
-
-        } catch (err) {
-            hideTyping();
-            addBubble("lol something broke... try again", 'them');
+        for (let i = 0; i < d.messages.length; i++) {
+            if (i > 0) { dots(); await sleep(500 + Math.random()*400); noDots(); }
+            bubble(d.messages[i], 't');
+            await sleep(150);
         }
 
-        sending = false;
-        sendBtn.disabled = false;
-        msgInput.focus();
+        if (d.imageUrl) { await sleep(300); showImg(d.imageUrl); }
+
+        if (d.triggerEnd) {
+            await sleep(1200);
+            document.getElementById('end').classList.add('show');
+            let n = 0;
+            const iv = setInterval(() => {
+                n += Math.ceil(drained/20);
+                if (n >= drained) { n = drained; clearInterval(iv); }
+                document.getElementById('endAmt').textContent = '$' + n;
+            }, 30);
+        }
+    } catch(e) {
+        noDots();
+        bubble("hold on something broke lol", 't');
     }
 
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    busy = false;
+    document.getElementById('sbtn').disabled = false;
+    inp.focus();
+}
 
-    // Enter to send
-    msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+inp.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 </script>
 </body>
 </html>
