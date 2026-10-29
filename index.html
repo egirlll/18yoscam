@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scam Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .dm-header {
+            background: #1a1a1a;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .dm-header .back-arrow {
+            color: #888;
+            font-size: 20px;
+        }
+
+        .dm-header .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1db954, #0d8f3f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .dm-header .name-section {
+            flex: 1;
+        }
+
+        .dm-header .name {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .dm-header .handle {
+            color: #888;
+            font-size: 13px;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar { display: none; }
+
+        /* Message Bubbles */
+        .message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
+        }
+
+        .message.them {
+            background: #2a2a2a;
+            color: #fff;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message.you {
+            background: #1d9bf0;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            align-self: flex-start;
+            background: #2a2a2a;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-left-radius: 6px;
+            display: flex;
+            gap: 4px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .typing-indicator .dot {
+            width: 7px;
+            height: 7px;
+            background: #888;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Payment Notification */
+        .payment-notif {
+            align-self: center;
+            background: linear-gradient(135deg, #1db954, #0d8f3f);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            animation: paymentPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: 8px 0;
+        }
+
+        @keyframes paymentPop {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Drain Counter */
+        .drain-counter {
+            position: fixed;
+            top: 76px;
+            right: 16px;
+            background: rgba(255, 0, 0, 0.15);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ff4444;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .drain-counter .amount {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        /* Choice Buttons */
+        .choices {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .choice-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .choice-btn:hover {
+            background: #252525;
+            border-color: #1d9bf0;
+        }
+
+        .choice-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Tap Prompt */
+        .tap-prompt {
+            text-align: center;
+            padding: 16px;
+            color: #555;
+            font-size: 13px;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Intro Screen */
+        .intro-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            z-index: 100;
+            padding: 40px;
+        }
+
+        .intro-screen h1 {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .intro-screen p {
+            color: #888;
+            font-size: 15px;
+            text-align: center;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+
+        .intro-screen .start-btn {
+            background: linear-gradient(135deg, #1db954, #0d8f3f);
+            color: #fff;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .intro-screen .start-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* End Screen */
+        .end-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 100;
+            padding: 40px;
+            display: none;
+        }
+
+        .end-screen .total {
+            font-size: 48px;
+            font-weight: 800;
+            color: #ff4444;
+        }
+
+        .end-screen .total-label {
+            color: #888;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .end-screen .message-text {
+            color: #ccc;
+            font-size: 16px;
+            text-align: center;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+
+        .end-screen .cta-btn {
+            background: linear-gradient(135deg, #1d9bf0, #0d6ebd);
+            color: #fff;
+            border: none;
+            padding: 16px 36px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .end-screen .cta-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .end-screen .throne-btn {
+            background: linear-gradient(135deg, #1db954, #0d8f3f);
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+        }
+
+        .end-screen .throne-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .end-screen .warned {
+            color: #ff4444;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Intro Screen -->
+    <div class="intro-screen" id="introScreen">
+        <h1>💸 Scam Simulator</h1>
+        <p>Think you can't be scammed? Let's test that theory. This is a simulation — no real money involved.</p>
+        <button class="start-btn" onclick="startSimulation()">Start</button>
+    </div>
+
+    <!-- End Screen -->
+    <div class="end-screen" id="endScreen">
+        <div class="total-label">Total Drained</div>
+        <div class="total" id="endTotal">$0</div>
+        <div class="message-text">told u i'd scam u 😂<br><br>that was a simulation.<br>imagine what the real thing feels like.</div>
+        <a href="https://twitter.com/messages/compose?recipient_id=18YOSCAM" class="cta-btn" target="_blank">DM @18YOSCAM →</a>
+        <a href="https://throne.com/" class="throne-btn" target="_blank">Send on Throne 💸</a>
+        <div class="warned">u were warned.</div>
+    </div>
+
+    <!-- DM Header -->
+    <div class="dm-header">
+        <span class="back-arrow">‹</span>
+        <div class="avatar">💸</div>
+        <div class="name-section">
+            <div class="name">18YO SCAM</div>
+            <div class="handle">@18YOSCAM</div>
+        </div>
+    </div>
+
+    <!-- Drain Counter -->
+    <div class="drain-counter" id="drainCounter">
+        <div style="font-size: 11px; opacity: 0.7;">DRAINED</div>
+        <div class="amount" id="drainAmount">$0</div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area" id="chatArea"></div>
+
+    <!-- Bottom Area (choices / tap prompt) -->
+    <div id="bottomArea"></div>
+
+    <script>
+        let totalDrained = 0;
+        let currentStep = 0;
+        const chatArea = document.getElementById('chatArea');
+        const bottomArea = document.getElementById('bottomArea');
+        const drainCounter = document.getElementById('drainCounter');
+
+        function scrollToBottom() {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function updateDrainCounter(amount) {
+            totalDrained += amount;
+            drainCounter.style.display = 'block';
+            document.getElementById('drainAmount').textContent = '$' + totalDrained;
+        }
+
+        function addMessage(text, type, delay = 0) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    if (type === 'them') {
+                        // Show typing first
+                        const typing = document.createElement('div');
+                        typing.className = 'typing-indicator';
+                        typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+                        chatArea.appendChild(typing);
+                        scrollToBottom();
+
+                        setTimeout(() => {
+                            typing.remove();
+                            const msg = document.createElement('div');
+                            msg.className = 'message them';
+                            msg.textContent = text;
+                            chatArea.appendChild(msg);
+                            scrollToBottom();
+                            resolve();
+                        }, 800 + Math.random() * 600);
+                    } else if (type === 'you') {
+                        const msg = document.createElement('div');
+                        msg.className = 'message you';
+                        msg.textContent = text;
+                        chatArea.appendChild(msg);
+                        scrollToBottom();
+                        resolve();
+                    } else if (type === 'payment') {
+                        const notif = document.createElement('div');
+                        notif.className = 'payment-notif';
+                        notif.textContent = '💸 Payment Sent — $' + text;
+                        chatArea.appendChild(notif);
+                        updateDrainCounter(parseInt(text));
+                        scrollToBottom();
+                        resolve();
+                    }
+                }, delay);
+            });
+        }
+
+        function showChoices(choices) {
+            const container = document.createElement('div');
+            container.className = 'choices';
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = choice.text;
+                btn.onclick = () => {
+                    container.remove();
+                    choice.action();
+                };
+                container.appendChild(btn);
+            });
+            bottomArea.appendChild(container);
+        }
+
+        function showTapPrompt(callback) {
+            bottomArea.innerHTML = '<div class="tap-prompt" id="tapPrompt">tap to continue</div>';
+            const handler = () => {
+                bottomArea.innerHTML = '';
+                document.removeEventListener('click', handler);
+                callback();
+            };
+            setTimeout(() => document.addEventListener('click', handler), 300);
+        }
+
+        function startSimulation() {
+            document.getElementById('introScreen').style.display = 'none';
+            phase1();
+        }
+
+        async function phase1() {
+            await addMessage("hey", "them", 500);
+            await addMessage("saw u on my timeline", "them", 400);
+            await addMessage("u look like the type that's easy to scam 😂", "them", 300);
+
+            showChoices([
+                { text: "lmao what? 😂", action: phase1Response },
+                { text: "try me", action: phase1Response },
+                { text: "block & report 🚫", action: phase1Block }
+            ]);
+        }
+
+        async function phase1Block() {
+            addMessage("block & report 🚫", "you");
+            await addMessage("u can't block me", "them", 500);
+            await addMessage("u already clicked on this", "them", 400);
+            await addMessage("which means ur curious", "them", 300);
+            await addMessage("and curious = easy 🤭", "them", 300);
+            showTapPrompt(phase2);
+        }
+
+        async function phase1Response() {
+            addMessage("lol what", "you");
+            await addMessage("relax i'm joking", "them", 500);
+            await addMessage("unless u want me to prove it 🤭", "them", 400);
+            showTapPrompt(phase2);
+        }
+
+        async function phase2() {
+            await addMessage("send me $5", "them", 300);
+            await addMessage("just $5", "them", 300);
+            await addMessage("if u can walk away after that i'll leave u alone", "them", 300);
+
+            showChoices([
+                { text: "fine it's just $5", action: phase2Send },
+                { text: "no chance 😂", action: phase2Refuse }
+            ]);
+        }
+
+        async function phase2Refuse() {
+            addMessage("no chance 😂", "you");
+            await addMessage("that's what they all say", "them", 500);
+            await addMessage("then they send $5 \"just to prove they can stop\"", "them", 400);
+            await addMessage("so go on then", "them", 300);
+            await addMessage("prove it", "them", 300);
+
+            showChoices([
+                { text: "fine. $5. that's it.", action: phase2Send },
+                { text: "...", action: phase2Send }
+            ]);
+        }
+
+        async function phase2Send() {
+            addMessage("fine", "you");
+            await addMessage("5", "payment", 500);
+            await addMessage("good 😂", "them", 400);
+            await addMessage("that was easy", "them", 300);
+            showTapPrompt(phase3);
+        }
+
+        async function phase3() {
+            await addMessage("now send $10", "them", 300);
+
+            showChoices([
+                { text: "u said just $5", action: phase3Protest },
+                { text: "whatever", action: phase3Send }
+            ]);
+        }
+
+        async function phase3Protest() {
+            addMessage("u said just $5", "you");
+            await addMessage("i lied 🤭", "them", 500);
+            await addMessage("u already sent $5", "them", 400);
+            await addMessage("what's another $10", "them", 300);
+            await addMessage("u've already lost", "them", 300);
+
+            showChoices([
+                { text: "...", action: phase3Send },
+                { text: "fine just this once", action: phase3Send }
+            ]);
+        }
+
+        async function phase3Send() {
+            addMessage("...", "you");
+            await addMessage("10", "payment", 500);
+            await addMessage("see how easy that was?", "them", 400);
+            await addMessage("u didn't even fight it", "them", 300);
+            showTapPrompt(phase4);
+        }
+
+        async function phase4() {
+            await addMessage("$25", "them", 300);
+            await addMessage("don't think about it", "them", 300);
+            await addMessage("just do it", "them", 300);
+
+            showChoices([
+                { text: "this is getting out of hand", action: phase4Resist },
+                { text: "send $25", action: phase4Send }
+            ]);
+        }
+
+        async function phase4Resist() {
+            addMessage("this is getting out of hand", "you");
+            await addMessage("is it though?", "them", 500);
+            await addMessage("or is this exactly what u wanted", "them", 400);
+            await addMessage("u could've closed this at $5", "them", 300);
+            await addMessage("but u're still here 😂", "them", 300);
+            await addMessage("$25. now.", "them", 300);
+
+            showChoices([
+                { text: "...", action: phase4Send }
+            ]);
+        }
+
+        async function phase4Send() {
+            await addMessage("25", "payment", 400);
+            await addMessage("there it is", "them", 400);
+            await addMessage("u know what comes next", "them", 300);
+            showTapPrompt(phase5);
+        }
+
+        async function phase5() {
+            await addMessage("$50", "them", 300);
+
+            showChoices([
+                { text: "i should stop", action: phase5Resist },
+                { text: "send $50", action: phase5Send }
+            ]);
+        }
+
+        async function phase5Resist() {
+            addMessage("i should stop", "you");
+            await addMessage("\"should\"", "them", 500);
+            await addMessage("but u won't", "them", 400);
+            await addMessage("u haven't stopped once this entire time", "them", 300);
+            await addMessage("because stopping was never the plan", "them", 300);
+
+            showChoices([
+                { text: "send $50", action: phase5Send }
+            ]);
+        }
+
+        async function phase5Send() {
+            await addMessage("50", "payment", 400);
+            await addMessage("💀💀💀", "them", 400);
+            await addMessage("u really just kept going", "them", 300);
+            showTapPrompt(phase6);
+        }
+
+        async function phase6() {
+            await addMessage("one more", "them", 300);
+            await addMessage("$100", "them", 300);
+            await addMessage("u've already sent $" + totalDrained + "... what's another $100", "them", 300);
+
+            showChoices([
+                { text: "i can't afford this", action: phase6Final },
+                { text: "take it", action: phase6Final }
+            ]);
+        }
+
+        async function phase6Final() {
+            await addMessage("100", "payment", 400);
+            await addMessage("😂😂😂", "them", 500);
+            await addMessage("told u", "them", 400);
+            await addMessage("u were never gonna stop me", "them", 400);
+            await addMessage("u couldn't even stop urself", "them", 400);
+
+            showTapPrompt(showEnd);
+        }
+
+        function showEnd() {
+            const endScreen = document.getElementById('endScreen');
+            endScreen.style.display = 'flex';
+            document.getElementById('endTotal').textContent = '$' + totalDrained;
+
+            // Animate the counter
+            let count = 0;
+            const target = totalDrained;
+            const interval = setInterval(() => {
+                count += Math.ceil(target / 30);
+                if (count >= target) {
+                    count = target;
+                    clearInterval(interval);
+                }
+                document.getElementById('endTotal').textContent = '$' + count;
+            }, 40);
+        }
+    </script>
+</body>
+</html>
