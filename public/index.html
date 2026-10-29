@@ -8,31 +8,18 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* ── Gate Screen ── */
-        .gate { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
-        .gate.gone { display: none; }
-        .gate-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; padding: 32px 28px; max-width: 360px; width: 100%; text-align: center; }
-        .gate-av { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
-        .gate-name { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
-        .gate-handle { color: #555; font-size: 14px; margin-bottom: 18px; }
-        .gate-divider { height: 1px; background: #1a1a1a; margin: 0 -28px 18px; }
-        .gate-label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
-        .gate-price { font-size: 36px; font-weight: 800; color: #1db954; margin-bottom: 4px; }
-        .gate-sub { color: #555; font-size: 13px; margin-bottom: 24px; }
-        .gate-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; color: #fff; transition: 0.2s; }
-        .gate-btn:active { transform: scale(0.97); }
-        .gate-warn { color: #444; font-size: 11px; margin-top: 14px; line-height: 1.4; }
-
-        /* ── Chat ── */
+        /* Header */
         .hdr { background: #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #111; }
         .hdr .av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
         .hdr .nm { font-weight: 600; font-size: 14px; }
         .hdr .hd { color: #444; font-size: 12px; }
 
+        /* Pill */
         .pill { position: fixed; top: 56px; right: 12px; background: rgba(180,0,0,0.08); border: 1px solid rgba(180,0,0,0.12); padding: 3px 9px; border-radius: 7px; z-index: 20; display: none; text-align: center; }
         .pill .pl { font-size: 8px; color: #b33; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
         .pill .pa { font-size: 15px; font-weight: 700; color: #b33; }
 
+        /* Chat */
         .chat { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 3px; }
         .chat::-webkit-scrollbar { display: none; }
 
@@ -52,6 +39,25 @@
         .dots span:nth-child(3) { animation-delay: .3s; }
         @keyframes bb { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
 
+        /* Send Confirmation Button */
+        .send-confirm {
+            align-self: center;
+            background: #1db954;
+            border: none;
+            color: #fff;
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 8px 0;
+            animation: p .3s ease;
+            transition: 0.2s;
+        }
+        .send-confirm:active { transform: scale(0.96); }
+        .send-confirm:hover { background: #1aa34a; }
+
+        /* Input */
         .ib { background: #0a0a0a; border-top: 1px solid #111; padding: 8px 12px; display: flex; gap: 8px; align-items: center; }
         .ib input { flex: 1; background: #111; border: 1px solid #1a1a1a; border-radius: 20px; padding: 10px 16px; color: #fff; font-size: 15px; outline: none; }
         .ib input::placeholder { color: #333; }
@@ -60,7 +66,7 @@
         .ib button:disabled { opacity: 0.15; }
         .ib button svg { fill: #fff; width: 15px; height: 15px; }
 
-        /* ── End ── */
+        /* End */
         .end { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 200; padding: 40px; }
         .end.show { display: flex; }
         .end .el { color: #444; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; }
@@ -74,21 +80,6 @@
 </head>
 <body>
 
-<!-- Gate -->
-<div class="gate" id="gate">
-    <div class="gate-card">
-        <div class="gate-av" id="gAv" style="background:#e74c3c">👑</div>
-        <div class="gate-name" id="gNm">SCAMGOD</div>
-        <div class="gate-handle" id="gHd">@19YOscamgod</div>
-        <div class="gate-divider"></div>
-        <div class="gate-label">session fee</div>
-        <div class="gate-price" id="gPrice">$10</div>
-        <div class="gate-sub">1-on-1 private session</div>
-        <button class="gate-btn" id="gBtn" style="background:#1db954" onclick="startSession()">confirm & start session</button>
-        <div class="gate-warn">by continuing you agree this is a paid findom session</div>
-    </div>
-</div>
-
 <!-- End -->
 <div class="end" id="end">
     <div class="el">session total</div>
@@ -100,16 +91,16 @@
 </div>
 
 <!-- Header -->
-<div class="hdr" id="hdr" style="display:none">
+<div class="hdr" id="hdr">
     <div class="av" id="hAv" style="background:#e74c3c">👑</div>
     <div><div class="nm" id="hNm">SCAMGOD</div><div class="hd" id="hHd">@19YOscamgod</div></div>
 </div>
 
 <div class="pill" id="pill"><div class="pl">sent</div><div class="pa" id="pAmt">$0</div></div>
 
-<div class="chat" id="chat" style="display:none"></div>
+<div class="chat" id="chat"></div>
 
-<div class="ib" id="ib" style="display:none">
+<div class="ib" id="ib">
     <input type="text" id="inp" placeholder="say something..." autocomplete="off" />
     <button id="sb" onclick="send()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
 </div>
@@ -119,54 +110,31 @@ let sid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).
 let drained = 0;
 let busy = false;
 let info = {};
+let pendingDrain = 0;
 
 const chat = document.getElementById('chat');
 const inp = document.getElementById('inp');
 
-// Load persona info
+// Load persona & auto-start
 fetch('/api/persona').then(r=>r.json()).then(p => {
     info = p;
-    document.getElementById('gAv').textContent = p.avatar;
-    document.getElementById('gAv').style.background = p.color;
-    document.getElementById('gNm').textContent = p.name;
-    document.getElementById('gHd').textContent = p.handle;
-    document.getElementById('gPrice').textContent = '$' + p.sessionPrice;
-    document.getElementById('gBtn').style.background = p.color;
     document.getElementById('hAv').textContent = p.avatar;
     document.getElementById('hAv').style.background = p.color;
     document.getElementById('hNm').textContent = p.name;
     document.getElementById('hHd').textContent = p.handle;
     if (p.twitter) document.getElementById('dmL').href = p.twitter;
     if (p.throne) document.getElementById('thL').href = p.throne;
-});
 
-async function startSession() {
-    // Confirm tip & start
-    const res = await fetch('/api/start', {
+    // Auto-start session
+    fetch('/api/start', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ sessionId: sid })
+    }).then(() => {
+        inp.focus();
+        toAI('[conversation just started — open with something cocky, ask what theyre into]');
     });
-    const data = await res.json();
-    drained = data.totalDrained || info.sessionPrice || 10;
-
-    document.getElementById('gate').classList.add('gone');
-    document.getElementById('hdr').style.display = 'flex';
-    chat.style.display = 'flex';
-    document.getElementById('ib').style.display = 'flex';
-
-    // Show initial tip
-    showSent(info.sessionPrice || 10, true);
-
-    // Update pill
-    document.getElementById('pill').style.display = 'block';
-    document.getElementById('pAmt').textContent = '$' + drained;
-
-    inp.focus();
-
-    // AI opens the session
-    await toAI('[session started — they just paid the session fee. open the conversation]');
-}
+});
 
 function scroll() { chat.scrollTop = chat.scrollHeight; }
 
@@ -184,15 +152,31 @@ function showImg(url) {
     chat.appendChild(d); scroll();
 }
 
-function showSent(amt, initial) {
-    if (!initial) drained += amt;
+function showSendButton(amount) {
+    pendingDrain = amount;
+    const btn = document.createElement('button');
+    btn.className = 'send-confirm';
+    btn.textContent = `send $${amount} 💸`;
+    btn.onclick = () => {
+        btn.remove();
+        confirmSend(amount);
+    };
+    chat.appendChild(btn);
+    scroll();
+}
+
+function confirmSend(amount) {
+    drained += amount;
     const d = document.createElement('div');
     d.className = 'sn';
-    d.textContent = `$${amt} sent`;
+    d.textContent = `$${amount} sent`;
     chat.appendChild(d);
     document.getElementById('pill').style.display = 'block';
     document.getElementById('pAmt').textContent = '$' + drained;
     scroll();
+
+    // Tell AI they sent
+    toAI('[they just sent $' + amount + ']');
 }
 
 function dots() {
@@ -226,16 +210,23 @@ async function toAI(text) {
         const d = await r.json();
         noDots();
 
-        if (d.drainAmount > 0) showSent(d.drainAmount);
-
+        // Show messages
         for (let i = 0; i < d.messages.length; i++) {
             if (i > 0) { dots(); await sleep(400 + Math.random()*400); noDots(); }
             bubble(d.messages[i], 't');
             await sleep(120);
         }
 
+        // Show image if any
         if (d.imageUrl) { await sleep(300); showImg(d.imageUrl); }
 
+        // Show send button if AI is asking for money
+        if (d.drainAmount > 0) {
+            await sleep(400);
+            showSendButton(d.drainAmount);
+        }
+
+        // End screen
         if (d.triggerEnd) {
             await sleep(1200);
             const end = document.getElementById('end');
@@ -249,15 +240,13 @@ async function toAI(text) {
         }
     } catch(e) {
         noDots();
-        // Show retry button instead of spamming error messages
         const r = document.createElement('div');
         r.className = 'sn';
         r.style.cursor = 'pointer';
         r.style.color = '#888';
         r.textContent = 'connection lost — tap to retry';
         r.onclick = async () => { r.remove(); await toAI(text); };
-        chat.appendChild(r);
-        scroll();
+        chat.appendChild(r); scroll();
     }
 
     busy = false;
