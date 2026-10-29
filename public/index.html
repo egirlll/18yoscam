@@ -249,7 +249,15 @@ async function toAI(text) {
         }
     } catch(e) {
         noDots();
-        bubble("hold on something broke 💀", 't');
+        // Show retry button instead of spamming error messages
+        const r = document.createElement('div');
+        r.className = 'sn';
+        r.style.cursor = 'pointer';
+        r.style.color = '#888';
+        r.textContent = 'connection lost — tap to retry';
+        r.onclick = async () => { r.remove(); await toAI(text); };
+        chat.appendChild(r);
+        scroll();
     }
 
     busy = false;
