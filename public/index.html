@@ -8,6 +8,19 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
+        /* Gate */
+        .gate { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 30px; }
+        .gate-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; padding: 32px 28px; max-width: 340px; width: 100%; text-align: center; }
+        .gate-av { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .gate-name { font-size: 20px; font-weight: 800; }
+        .gate-handle { color: #555; font-size: 13px; margin-bottom: 16px; }
+        .gate-div { height: 1px; background: #1a1a1a; margin: 0 -28px 16px; }
+        .gate-label { color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+        .gate-price { font-size: 32px; font-weight: 800; color: #1db954; margin-bottom: 2px; }
+        .gate-sub { color: #444; font-size: 12px; margin-bottom: 22px; }
+        .gate-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; color: #fff; background: #1db954; transition: 0.2s; }
+        .gate-btn:active { transform: scale(0.97); }
+
         /* Header */
         .hdr { background: #0a0a0a; padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #111; }
         .hdr .av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
@@ -80,6 +93,20 @@
 </head>
 <body>
 
+<!-- Gate -->
+<div class="gate" id="gate">
+    <div class="gate-card">
+        <div class="gate-av" id="gAv" style="background:#e74c3c">👑</div>
+        <div class="gate-name" id="gNm">SCAMGOD</div>
+        <div class="gate-handle" id="gHd">@19YOscamgod</div>
+        <div class="gate-div"></div>
+        <div class="gate-label">session fee</div>
+        <div class="gate-price" id="gPrice">$5</div>
+        <div class="gate-sub">1-on-1 private session</div>
+        <button class="gate-btn" onclick="startSession()">send $5 & start session</button>
+    </div>
+</div>
+
 <!-- End -->
 <div class="end" id="end">
     <div class="el">session total</div>
@@ -91,16 +118,16 @@
 </div>
 
 <!-- Header -->
-<div class="hdr" id="hdr">
+<div class="hdr" id="hdr" style="display:none">
     <div class="av" id="hAv" style="background:#e74c3c">👑</div>
     <div><div class="nm" id="hNm">SCAMGOD</div><div class="hd" id="hHd">@19YOscamgod</div></div>
 </div>
 
 <div class="pill" id="pill"><div class="pl">sent</div><div class="pa" id="pAmt">$0</div></div>
 
-<div class="chat" id="chat"></div>
+<div class="chat" id="chat" style="display:none"></div>
 
-<div class="ib" id="ib">
+<div class="ib" id="ib" style="display:none">
     <input type="text" id="inp" placeholder="say something..." autocomplete="off" />
     <button id="sb" onclick="send()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
 </div>
@@ -115,7 +142,7 @@ let pendingDrain = 0;
 const chat = document.getElementById('chat');
 const inp = document.getElementById('inp');
 
-// Load persona & auto-start
+// Load persona & show gate
 fetch('/api/persona').then(r=>r.json()).then(p => {
     info = p;
     document.getElementById('hAv').textContent = p.avatar;
@@ -124,17 +151,36 @@ fetch('/api/persona').then(r=>r.json()).then(p => {
     document.getElementById('hHd').textContent = p.handle;
     if (p.twitter) document.getElementById('dmL').href = p.twitter;
     if (p.throne) document.getElementById('thL').href = p.throne;
+    document.getElementById('gAv').textContent = p.avatar;
+    document.getElementById('gAv').style.background = p.color;
+    document.getElementById('gNm').textContent = p.name;
+    document.getElementById('gHd').textContent = p.handle;
+    document.getElementById('gPrice').textContent = '$' + p.sessionPrice;
+});
 
-    // Auto-start session
-    fetch('/api/start', {
+async function startSession() {
+    await fetch('/api/start', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ sessionId: sid })
-    }).then(() => {
-        inp.focus();
-        toAI('[conversation just started — open with something cocky, ask what theyre into]');
     });
-});
+    drained = info.sessionPrice || 5;
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('hdr').style.display = 'flex';
+    chat.style.display = 'flex';
+    document.getElementById('ib').style.display = 'flex';
+
+    // Show initial payment
+    const d = document.createElement('div');
+    d.className = 'sn';
+    d.textContent = '$' + drained + ' sent';
+    chat.appendChild(d);
+    document.getElementById('pill').style.display = 'block';
+    document.getElementById('pAmt').textContent = '$' + drained;
+
+    inp.focus();
+    toAI('[session started — they just paid $' + drained + ' to start. be cocky about it, ask what theyre into]');
+}
 
 function scroll() { chat.scrollTop = chat.scrollHeight; }
 
